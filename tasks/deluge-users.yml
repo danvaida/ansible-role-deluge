@@ -1,0 +1,71 @@
+---
+- name: Checking if there are Deluge users to be added
+  lineinfile:
+    dest: "{{ deluge_config_dir }}/auth"
+    regexp: "^{{ item.name }}:{{ item.password }}:{{ item.access_level }}$"
+    line: "{{ item.name }}:{{ item.password }}:{{ item.access_level }}"
+    owner: "{{ deluge_user }}"
+    group: "{{ deluge_group }}"
+    mode: '0640'
+    state: present
+  check_mode: True
+  register: _deluge_users_to_add
+  with_items: "{{ deluge_users_to_add }}"
+  tags:
+    - deluge
+    - deluge_config
+
+- name: Checking if there are Deluge users to be removed
+  lineinfile:
+    dest: "{{ deluge_config_dir }}/auth"
+    regexp: "^{{ item }}"
+    owner: "{{ deluge_user }}"
+    group: "{{ deluge_group }}"
+    mode: '0640'
+    state: absent
+  check_mode: True
+  register: _deluge_users_to_remove
+  with_items: "{{ deluge_users_to_remove }}"
+  tags:
+    - deluge
+    - deluge_config
+
+- name: Deluge users need to be added or removed. deluge should be stopped beforehand
+  service:
+    name: deluged
+    state: stopped
+  when: _deluge_users_to_add|changed or _deluge_users_to_remove|changed
+  tags:
+    - deluge
+    - deluge_config
+
+- name: Deluge users to be added should be present
+  lineinfile:
+    dest: "{{ deluge_config_dir }}/auth"
+    regexp: "^{{ item.name }}:{{ item.password }}:{{ item.access_level }}$"
+    line: "{{ item.name }}:{{ item.password }}:{{ item.access_level }}"
+    owner: "{{ deluge_user }}"
+    group: "{{ deluge_group }}"
+    mode: '0640'
+    backup: True
+    state: present
+  with_items: "{{ deluge_users_to_add }}"
+  notify: restart deluged
+  tags:
+    - deluge
+    - deluge_config
+
+- name: Deluge users to be removed should be absent
+  lineinfile:
+    dest: "{{ deluge_config_dir }}/auth"
+    regexp: "^{{ item }}"
+    owner: "{{ deluge_user }}"
+    group: "{{ deluge_group }}"
+    mode: '0640'
+    backup: True
+    state: absent
+  with_items: "{{ deluge_users_to_remove }}"
+  notify: restart deluged
+  tags:
+    - deluge
+    - deluge_config

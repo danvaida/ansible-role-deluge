@@ -1,0 +1,26 @@
+---
+- name: Running the addition tests
+  hosts: localhost
+  any_errors_fatal: True
+  gather_facts: False
+  roles:
+    - role: '../../role'
+      deluge_users_to_add:
+        - name: user
+          password: 12345
+          access_level: 10
+
+  post_tasks:
+    - block:
+        - meta: flush_handlers
+
+        - uri:
+            url: "http://localhost:{{ deluge_web_port }}/"
+            return_content: True
+          register: _deluge_web_status
+
+        - name: Deluge Web interface should be up and running
+          assert:
+            that: "'TwistedWeb' in _deluge_web_status.server"
+
+      when: deluge_web

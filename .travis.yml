@@ -1,0 +1,11 @@
+---
+services:
+  - docker
+
+script:
+  - docker build -t ansible-role-deluge tests/support
+  - docker run -it -v $PWD:/role ansible-role-deluge
+  - docker run -it -v $PWD:/role --env EXTRA_VARS='deluge_web=False' ansible-role-deluge
+
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/

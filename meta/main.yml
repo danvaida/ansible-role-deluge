@@ -1,0 +1,15 @@
+---
+dependencies: []
+
+galaxy_info:
+  author: 'Dan Vaida'
+  description: 'Installs and configures Deluge BitTorrent client.'
+  min_ansible_version: '2.2'
+  license: BSD
+  platforms:
+    - name: Raspbian
+      versions:
+        - jessie
+  galaxy_tags:
+    - bittorrent
+    - p2p

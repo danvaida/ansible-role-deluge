@@ -1,0 +1,127 @@
+---
+- name: deluge packages should be installed
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: True
+    cache_valid_time: 3600
+  with_items:
+    - 'deluge-console'
+    - 'deluged'
+  tags:
+    - deluge
+    - deluge_package
+
+- stat:
+    path: "{{ deluge_logs_dir | dirname }}"
+  register: _deluge_logs_dir
+  tags:
+    - deluge
+
+- name: Deluge logs dir should be created
+  file:
+    path: "{{ deluge_logs_dir }}"
+    owner: "{{ deluge_user }}"
+    recurse: True
+    state: directory
+  when:
+    - _deluge_logs_dir is defined
+    - not _deluge_logs_dir.stat.exists
+  tags:
+    - deluge
+
+- stat:
+    path: "{{ deluge_download_location | dirname }}"
+  register: _deluge_download_location
+  tags:
+    - deluge
+
+- name: Deluge download directory should be created
+  file:
+    path: "{{ deluge_download_location }}"
+    owner: "{{ deluge_user }}"
+    group: "{{ deluge_group }}"
+    mode: '0755'
+    recurse: True
+    state: directory
+  when:
+    - _deluge_download_location is defined
+    - not _deluge_download_location.stat.exists
+  tags:
+    - deluge
+
+- name: Deluge should start at boot time
+  service:
+    name: deluged
+    enabled: True
+  tags:
+    - deluge
+
+- include: 'deluge-web.yml'
+  when: deluge_web
+  tags:
+    - deluge
+    - deluge_web
+
+- name: Deluge daemon should be enabled
+  lineinfile:
+    dest: '/etc/default/deluged'
+    regexp: '^ENABLE_DELUGED=0$'
+    backrefs: True
+    line: 'ENABLE_DELUGED=1'
+  tags:
+    - deluge
+    - deluge_config
+
+- name: Deluge daemon should be started
+  service:
+    name: deluged
+    state: started
+  tags:
+    - deluge
+
+- name: Pausing for the daemon to create some files
+  pause: seconds=5
+  tags:
+    - deluge
+
+- include: deluge-users.yml
+  when: deluge_users_to_add != [] or deluge_users_to_remove != []
+  tags:
+    - deluge
+    - deluge_users
+
+- name: Checking if we should template the deluge core config file
+  template:
+    src: 'core.conf.j2'
+    dest: "{{ deluge_config_dir }}/core.conf"
+    owner: "{{ deluge_user }}"
+    group: "{{ deluge_group }}"
+    mode: '0640'
+  check_mode: True
+  register: _deluge_core_conf
+  tags:
+    - deluge
+    - deluge_config
+
+- name: Deluge core config file needs updating. deluge should be stopped beforehand
+  service:
+    name: deluged
+    state: stopped
+  when: _deluge_core_conf|changed
+  tags:
+    - deluge
+    - deluge_config
+
+- name: Deluge config file should be templated
+  template:
+    src: 'core.conf.j2'
+    dest: "{{ deluge_config_dir }}/core.conf"
+    owner: "{{ deluge_user }}"
+    group: "{{ deluge_group }}"
+    mode: '0640'
+    backup: True
+  notify: restart deluged
+  tags:
+    - deluge
+    - deluge_config

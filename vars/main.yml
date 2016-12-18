@@ -1,0 +1,4 @@
+---
+deluge_user:     'debian-deluged'
+deluge_group:    'debian-deluged'
+deluge_logs_dir: '/var/log/deluged'

@@ -1,0 +1,57 @@
+---
+- name: deluge-web package should be installed
+  apt:
+    name: 'deluge-web'
+    state: present
+    update_cache: True
+    cache_valid_time: 3600
+  tags:
+    - deluge_package
+
+- name: deluge-web init script should be templated
+  template:
+    src: 'deluge-web.j2'
+    dest: '/etc/init.d/deluge-web'
+    mode: '0755'
+  notify: restart deluge-web
+  tags:
+    - deluge_service
+
+- name: deluge-web should start at boot time
+  service:
+    name: 'deluge-web'
+    enabled: True
+  tags:
+    - deluge_service
+
+- name: Checking if we should template the deluge-web config file
+  template:
+    src: 'web.conf.j2'
+    dest: "{{ deluge_config_dir }}/web.conf"
+    owner: "{{ deluge_user }}"
+    group: "{{ deluge_group }}"
+    mode: '0640'
+  check_mode: True
+  register: _deluge_web_conf
+  tags:
+    - deluge_config
+
+- name: deluge-web config file needs updating. deluge-web should be stopped beforehand
+  service:
+    name: 'deluge-web'
+    state: stopped
+  when: _deluge_web_conf|changed
+  tags:
+    - deluge_config
+
+- name: deluge-web config file should be templated
+  template:
+    src: 'web.conf.j2'
+    dest: "{{ deluge_config_dir }}/web.conf"
+    owner: "{{ deluge_user }}"
+    group: "{{ deluge_group }}"
+    mode: '0640'
+    backup: True
+  notify: restart deluge-web
+  tags:
+    - deluge_config

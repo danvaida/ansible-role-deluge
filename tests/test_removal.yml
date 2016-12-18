@@ -1,0 +1,9 @@
+---
+- name: Running the removal tests
+  hosts: localhost
+  any_errors_fatal: True
+  gather_facts: False
+  roles:
+    - role: '../../role'
+      deluge_users_to_remove:
+        - user
