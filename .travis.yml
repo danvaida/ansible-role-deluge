@@ -1,6 +1,13 @@
 ---
+sudo: required
+
 services:
   - docker
+
+before_install:
+  - echo "deb http://archive.ubuntu.com/ubuntu/ devel universe" | sudo tee /etc/apt/sources.list.d/devel-universe.list
+  - sudo apt-get update -qq
+  - sudo apt-get install --no-install-recommends qemu-user-static binfmt-support
 
 script:
   - docker build -t ansible-role-deluge tests/support
