@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/danvaida/ansible-role-deluge.svg?branch=master)](https://travis-ci.org/danvaida/ansible-role-deluge)
-[![Galaxy](https://img.shields.io/ansible/role/14358.svg)](https://galaxy.ansible.com/danvaida/ansible-role-deluge)
+[![Galaxy](https://img.shields.io/ansible/role/14358.svg)](https://galaxy.ansible.com/danvaida/deluge/)
 
 # Ansible Deluge role
 
