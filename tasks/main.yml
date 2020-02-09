@@ -108,7 +108,7 @@
   service:
     name: deluged
     state: stopped
-  when: _deluge_core_conf|changed
+  when: _deluge_core_conf.changed
   tags:
     - deluge
     - deluge_config

@@ -34,7 +34,7 @@
   service:
     name: deluged
     state: stopped
-  when: _deluge_users_to_add|changed or _deluge_users_to_remove|changed
+  when: _deluge_users_to_add.changed or _deluge_users_to_remove.changed
   tags:
     - deluge
     - deluge_config
